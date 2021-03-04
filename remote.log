@@ -1,1 +1,2 @@
 b23ec616-04a9-4ac2-a20d-76a05c557083 encryption=none name=hyak type=directory timestamp=1614893275.130628s
+e104f387-4b7b-4f47-8f81-627e27db63a4 encryption=none name=hyak rsyncurl=hyak:/gscratch/comdata/users/nathante/git_annex type=rsync timestamp=1614893202.261974545s
