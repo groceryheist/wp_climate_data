@@ -2,3 +2,4 @@ mwreverts>=0.1.5
 deltas>=0.6.2
 mediawiki-utilities>=0.4.18
 jupyter>=1.0.0
+jsonable>=0.3.1

@@ -9,7 +9,7 @@ from multiprocessing import Pool
 
 overwrite = False
 
-revcache_path = pathlib.Path("climate_change_revs.pickle")
+revcache_path = pathlib.Path("../data/climate_change_revs.pickle")
 
 def update_revs():
     api_session = api.Session("https://en.wikipedia.org/w/api.php")
