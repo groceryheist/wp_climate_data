@@ -32,6 +32,7 @@ class Wikilink:
     page_id:int
     page_title:str
     revision_id:int
+#    revision_parent_id:int
     revision_timestamp:datetime
     wikilink:str
 
@@ -61,8 +62,11 @@ def lines_from_gzip(path: Path) -> Iterable[bytes]:
     header = next(lines)
     # convert to string
     lines = (s.decode() for s in lines)
-    
-    yield from csv.reader(lines)
+    print(path)
+    try:
+        yield from csv.reader(lines)
+    except csv.Error:
+        print(f"Error in {path}")
 
 def lines_from_paths(files: Iterable[Path]) -> Iterable[str]:
     lines = chain(* map(lines_from_gzip, files))
@@ -144,13 +148,16 @@ def monthly_links(page_revisions):
     df = df.reset_index(drop=False)
     return df
 
-outparquet = Path("/home/nathante/mnt/wikilinks/monthly_link_snapshot.parquet")
+outparquet = Path("/mnt/wikilinks/monthly_link_snapshot.parquet")
 
-with pq.ParquetWriter(outparquet, table.schema) as pqwriter:
-    for page_id, page_revs in page_revisions:
-        df = monthly_links(page_revs)
-        table = pa.Table.from_pandas(df)
-        pqwriter.write_table(table)
+pqwriter = None
+for page_id, page_revs in page_revisions:
+    df = monthly_links(page_revs)
+    table = pa.Table.from_pandas(df)
+    if not pqwriter:
+        pqwriter = pq.ParquetWriter(outparquet, table.schema)
+
+    pqwriter.write_table(table)
 
 # def dict_from_line(line: bytes, keys: Iterable[str]) -> Mapping[str, Any]:
 #     items = split_line(line)
