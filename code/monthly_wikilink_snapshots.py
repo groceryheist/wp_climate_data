@@ -44,7 +44,7 @@ class Wikilink:
                            page_title = csv_line[1],
                            revision_id = int(csv_line[2]),
                            #                       revision_parent_id = try_int(items[3]),
-                           revision_timestamp = revision_timstamp,
+                           revision_timestamp = revision_timestamp,
                            wikilink = csv_line[9])
         except ValueError:
             print(line)
