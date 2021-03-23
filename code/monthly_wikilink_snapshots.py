@@ -94,7 +94,7 @@ def last_in_month(wikilinks):
         for rev in page_revs: 
             if last is None:
                 last = rev
-            elif rev.timestamp > last.timestamp:
+            elif rev.revision_timestamp > last.revision_timestamp:
                 last = rev
             else:
                 continue
