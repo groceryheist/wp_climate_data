@@ -1,6 +1,1 @@
-mwreverts>=0.1.5
-deltas>=0.6.2
-mediawiki-utilities>=0.4.18
-jupyter>=1.0.0
-jsonable>=0.3.1
-wordcloud>=1.8.1
+/annex/objects/SHA256E-s107--b84b28dbca48979fad8186bf8ebc77d77904e8edc17507d457d36ee196bc4b57.txt
