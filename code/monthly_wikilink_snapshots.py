@@ -32,24 +32,29 @@ class Wikilink:
     page_id:int
     page_title:str
     revision_id:int
-#    revision_parent_id:int
     revision_timestamp:datetime
     wikilink:str
 
     @staticmethod
     def from_line(csv_line:bytes):
         try:
+            revision_timestamp = datetime.fromtimestamp(wmtimestamp(csv_line[4]).serialize())
+            
             obj = Wikilink(page_id = int(csv_line[0]),
                            page_title = csv_line[1],
                            revision_id = int(csv_line[2]),
                            #                       revision_parent_id = try_int(items[3]),
-                           revision_timestamp = datetime.fromtimestamp(wmtimestamp(csv_line[4]).serialize()),
+                           revision_timestamp = revision_timstamp,
                            wikilink = csv_line[9])
         except ValueError:
             print(line)
 
         return obj
-                       
+
+    def get_month(self):
+        month = self.revision_timestamp.replace(day=1,hour=0,minute=0,second=0,microsecond=0)
+        return month
+
 def lines_from_gzip(path: Path) -> Iterable[bytes]:
     lines = gzip.open(path,'rb')
     # throw away the the header
@@ -75,14 +80,29 @@ def wikilinks_from_lines(lines:Iterable[bytes]) -> Iterable[Wikilink]:
 # the easist way to do this is to group by page_id
 #lines = lines_from_paths([test_path)
 
-lines = lines_from_paths(glob.glob("/mnt/wikilinks/*.csv.gz")
+lines = lines_from_paths(glob.glob("/data/wikilinks/*.csv.gz"))
 
 wikilinks = wikilinks_from_lines(lines)
+
+def last_in_month(wikilinks):
+    wikilinks_by_month = groupby(wikilinks, key = lambda wl: (wl.page_id, wl.get_month()))
+    for _, page_revs in wikilinks_by_month:
+        last = None
+        for rev in page_revs: 
+            if last is None:
+                last = rev
+            elif rev > last:
+                last = rev
+            else:
+                continue
+        yield last
 
 def group_by_page(wikilinks):
     return groupby(wikilinks, key = lambda wl: wl.page_id)
 
-page_revisions = group_by_page(wikilinks)
+last_wikilinks_in_month = last_in_month(wikilinks)
+
+page_revisions = group_by_page(last_wikilinks_in_month)
 
 def monthly_links(page_revisions):
     df = pd.DataFrame(page_revisions)
