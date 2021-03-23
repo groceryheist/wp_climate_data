@@ -10,7 +10,6 @@ from dataclasses import dataclass
 import pyarrow as pa
 import pyarrow.parquet as pq
 import csv
-import compressed_stream as cs
 import glob
 
 header = b'page_id,page_title,revision_id,revision_parent_id,revision_timestamp,user_type,user_username,user_id,revision_minor,wikilink.link,wikilink.tosection,wikilink.anchor,wikilink.section_name,wikilink.section_level,wikilink.section_number'
