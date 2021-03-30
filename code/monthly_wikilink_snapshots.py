@@ -2,7 +2,7 @@ import gzip
 from pathlib import Path
 from typing import Any
 from collections.abc import Iterable, Mapping
-from itertools import chain, groupby
+from itertools import chain, groupby, islice
 from datetime import datetime
 import pandas as pd
 from mw.types.timestamp import Timestamp as wmtimestamp
@@ -11,6 +11,7 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 import csv
 import glob
+import multiprocessing as mp
 
 header = b'page_id,page_title,revision_id,revision_parent_id,revision_timestamp,user_type,user_username,user_id,revision_minor,wikilink.link,wikilink.tosection,wikilink.anchor,wikilink.section_name,wikilink.section_level,wikilink.section_number'
 
@@ -75,7 +76,6 @@ def wikilinks_from_lines(lines:Iterable[bytes]) -> Iterable[Wikilink]:
     return map(Wikilink.from_line, lines)
 
 
-
 #test_path = Path("/home/nathante/mnt/wikilinks/enwiki-20180301-pages-meta-history10.xml-p2369541p2403290.7z.rawwikilinks.csv.gz")
 
 # great now we are reading a set of files one line at a time.
@@ -83,12 +83,11 @@ def wikilinks_from_lines(lines:Iterable[bytes]) -> Iterable[Wikilink]:
 # the easist way to do this is to group by page_id
 #lines = lines_from_paths([test_path)
 
-lines = lines_from_paths(glob.glob("/data/wikilinks/*.csv.gz"))
+#lines = lines_from_paths(glob.glob("~/data/wikilinks/*.csv.gz"))
 
-wikilinks = wikilinks_from_lines(lines)
 
 def last_in_month(wikilinks):
-    wikilinks_by_month = groupby(wikilinks, key = lambda wl: (wl.page_id, wl.get_month()))
+    wikilinks_by_month = groupby(wikilinks, key = lambda wl: (wl.page_id, wl.get_month(), wl.wikilink))
     for _, page_revs in wikilinks_by_month:
         last = None
         for rev in page_revs: 
@@ -102,10 +101,6 @@ def last_in_month(wikilinks):
 
 def group_by_page(wikilinks):
     return groupby(wikilinks, key = lambda wl: wl.page_id)
-
-last_wikilinks_in_month = last_in_month(wikilinks)
-
-page_revisions = group_by_page(last_wikilinks_in_month)
 
 def monthly_links(page_revisions):
     df = pd.DataFrame(page_revisions)
@@ -142,21 +137,35 @@ def monthly_links(page_revisions):
     last_revisions = last_revisions.set_index("revision_id")
 
     df.set_index("revision_id",inplace=True)
-    df = df.join(last_revisions,how='inner')
+    df = df.join(last_revisions,how='right')
     df = df.groupby(['revision_id','revision_timestamp','page_id','page_title'])['wikilink'].apply(list)
     df = df.reset_index(drop=False)
+    df['month'] = (df.revision_timestamp + pd.offsets.MonthEnd(0)).dt.date
     return df
 
-outparquet = Path("/mnt/wikilinks/monthly_link_snapshot.parquet")
+def process_gzip(path:str):
+    path = Path(path)
 
-pqwriter = None
-for page_id, page_revs in page_revisions:
-    df = monthly_links(page_revs)
-    table = pa.Table.from_pandas(df)
-    if not pqwriter:
-        pqwriter = pq.ParquetWriter(outparquet, table.schema)
+    lines = lines_from_gzip(path)
+    wikilinks = wikilinks_from_lines(lines)
 
-    pqwriter.write_table(table)
+    last_wikilinks_in_month = last_in_month(wikilinks)
+
+    page_revisions = group_by_page(last_wikilinks_in_month)
+
+    outparquet = path.parent / "monthly_snapshots" / (path.stem + '.parquet')
+    outparquet.parent.mkdir(exist_ok=True)
+    pqwriter = None
+    for page_id, page_revs in page_revisions:
+        df = monthly_links(page_revs)
+        table = pa.Table.from_pandas(df)
+        if not pqwriter:
+            pqwriter = pq.ParquetWriter(outparquet, table.schema)
+        pqwriter.write_table(table)
+
+files = glob.glob("/home/nathante/mnt/wikilinks/*.csv.gz")
+with mp.Pool(mp.cpu_count() - 1) as pool:
+    pool.map(process_gzip, files)
 
 # def dict_from_line(line: bytes, keys: Iterable[str]) -> Mapping[str, Any]:
 #     items = split_line(line)
