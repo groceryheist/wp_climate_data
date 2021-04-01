@@ -1,0 +1,3 @@
+[submodule "code/python-mwtext"]
+	path = code/python-mwtext
+	url = git@github.com:mediawiki-utilities/python-mwtext.git

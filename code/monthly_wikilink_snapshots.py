@@ -1,5 +1,5 @@
 import gzip
-from pathlib import Path
+from pathlikb import Path
 from typing import Any
 from collections.abc import Iterable, Mapping
 from itertools import chain, groupby, islice
@@ -12,10 +12,15 @@ import pyarrow.parquet as pq
 import csv
 import glob
 import multiprocessing as mp
+from util import *
 
 header = b'page_id,page_title,revision_id,revision_parent_id,revision_timestamp,user_type,user_username,user_id,revision_minor,wikilink.link,wikilink.tosection,wikilink.anchor,wikilink.section_name,wikilink.section_level,wikilink.section_number'
 
 keys = header.decode().split(',')
+
+import gzip
+from pathlib import Path
+from collections.abc import Iterable
 
 def split_line(line: bytes) -> Iterable[str]:
     items = line.decode().split(',')
@@ -26,6 +31,18 @@ def try_int(s):
         return int(s)
     except ValueError:
         return None
+
+def lines_from_gzip(path: Path) -> Iterable[bytes]:
+    lines = gzip.open(path,'rb')
+    # throw away the the header
+    header = next(lines)
+    # convert to string
+    lines = (s.decode() for s in lines)
+    print(path)
+    try:
+        yield from csv.reader(lines)
+    except csv.Error:
+        print(f"Error in {path}")
 
 @dataclass
 class Wikilink:
@@ -56,17 +73,6 @@ class Wikilink:
         month = self.revision_timestamp.replace(day=1,hour=0,minute=0,second=0,microsecond=0)
         return month
 
-def lines_from_gzip(path: Path) -> Iterable[bytes]:
-    lines = gzip.open(path,'rb')
-    # throw away the the header
-    header = next(lines)
-    # convert to string
-    lines = (s.decode() for s in lines)
-    print(path)
-    try:
-        yield from csv.reader(lines)
-    except csv.Error:
-        print(f"Error in {path}")
 
 def lines_from_paths(files: Iterable[Path]) -> Iterable[str]:
     lines = chain(* map(lines_from_gzip, files))
@@ -84,7 +90,6 @@ def wikilinks_from_lines(lines:Iterable[bytes]) -> Iterable[Wikilink]:
 #lines = lines_from_paths([test_path)
 
 #lines = lines_from_paths(glob.glob("~/data/wikilinks/*.csv.gz"))
-
 
 def last_in_month(wikilinks):
     wikilinks_by_month = groupby(wikilinks, key = lambda wl: (wl.page_id, wl.get_month(), wl.wikilink))
