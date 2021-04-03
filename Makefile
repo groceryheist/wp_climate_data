@@ -4,9 +4,7 @@ all: pythonenv
 environment.sif: py3_9_scipy_graphviz.def
 	sudo singularity build environment.sif py3_9_scipy_graphviz.def
 
-pythonenv: environment.sif
-	singularity exec environment.sif python3 -m venv code 
-	singularity exec environment.sif source code/bin/activate
-	singularity exec environment.sif pip3 install -i requirements.txt
+pythonenv: environment.sif setup_pyvenv.sh
+	singularity exec environment.sif ./setup_pyvenv.sh
 
 .PHONY: pythonenv
