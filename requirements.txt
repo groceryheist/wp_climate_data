@@ -1,1 +1,7 @@
-/annex/objects/SHA256E-s122--18c6d083989741d6c5f149fdbc7360ee53a41b1fc26a61248c6d49299360f13b.txt
+mwreverts>=0.1.5
+deltas>=0.6.2
+mediawiki-utilities>=0.4.18
+jupyter>=1.0.0
+jsonable>=0.3.1
+wordcloud>=1.8.1
+dask>=2021.4.0
