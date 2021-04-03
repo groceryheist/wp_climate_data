@@ -4,6 +4,6 @@ from: debian:bullseye
 %post
 	apt update && apt upgrade -y
 	apt install -y libopenblas-base dialog
-	apt install -y r-base r-recommended emacs vim python3-sklearn jupyter moreutils git curl meld xauth python3-venv python3-pip python3-wheel apt-utils graphviz libgraphviz-dev 
+	apt install -y r-base r-recommended emacs vim python3.9 python3-sklearn jupyter moreutils git curl meld xauth python3-venv python3-pip python3-wheel apt-utils graphviz libgraphviz-dev 
 	apt clean
 
