@@ -1,4 +1,4 @@
-39326114-163d-4a20-9b46-c1ac3448f3d8 encryption=none name=local rsyncurl=/home/nathante/storage type=rsync timestamp=1617479296.73095657s
+39326114-163d-4a20-9b46-c1ac3448f3d8 encryption=none name=local rsyncurl=/home/nathante/storage type=rsync timestamp=1617479337.487755777s
 6c02bc7d-10ae-4cfc-a133-89997ad3c703 encryption=none name=hyak2 rsyncurl=mox2.hyak.uw.edu:/gscratch/comdata/users/nathante/git_annex2 type=rsync timestamp=1614898938.126351s
 b23ec616-04a9-4ac2-a20d-76a05c557083 encryption=none name=hyak_dir type=directory timestamp=1614894019.888649s
 e104f387-4b7b-4f47-8f81-627e27db63a4 encryption=none name=hyak rsyncurl=mox2.hyak.uw.edu:/gscratch/comdata/users/nathante/git_annex type=rsync timestamp=1614898528.484003505s
