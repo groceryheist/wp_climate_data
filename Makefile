@@ -1,4 +1,4 @@
-# Dependencies: singularity 3.7+, Make, tested under debian 10 and debian 11
+# Dependencies: singularity 3.7+, Make, sudo, tested under debian 11 (bullseye) and debian 10 (buster).
 all: pythonenv
 
 environment.sif: py3_9_scipy_graphviz.def
