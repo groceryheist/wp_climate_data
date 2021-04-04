@@ -1,5 +1,5 @@
 import gzip
-from pathlikb import Path
+from pathlib import Path
 from typing import Any
 from collections.abc import Iterable, Mapping
 from itertools import chain, groupby, islice
@@ -40,7 +40,7 @@ def lines_from_gzip(path: Path) -> Iterable[bytes]:
     lines = (s.decode() for s in lines)
     print(path)
     try:
-        yield from csv.reader(lines)
+        yield from csv.reader(lines,dialect='excel')
     except csv.Error:
         print(f"Error in {path}")
 
@@ -148,7 +148,7 @@ def monthly_links(page_revisions):
     df['month'] = (df.revision_timestamp + pd.offsets.MonthEnd(0)).dt.date
     return df
 
-def process_gzip(path:str):
+def process_gzip(path:Path):
     path = Path(path)
 
     lines = lines_from_gzip(path)
@@ -168,7 +168,30 @@ def process_gzip(path:str):
             pqwriter = pq.ParquetWriter(outparquet, table.schema)
         pqwriter.write_table(table)
 
-files = glob.glob("/home/nathante/mnt/wikilinks/*.csv.gz")
+
+# deletes any broken parquets
+def test_parquets(outputdir:Path, dry_run = True):
+    files = glob.glob(str(outputdir / "*.parquet"))
+    valid = [] 
+    for f in files:
+        try:
+            pa.parquet.read_metadata(f)
+            valid.append(f)
+        except pa.ArrowInvalid:
+            if dry_run:
+                print(f)
+            else:
+                f.unlink()
+    return valid
+
+valid = test_parquets(Path("/home/nathante/mnt/wikilinks/monthly_snapshots"))
+
+valid_filenames = set(Path(f).name for f in valid)
+
+files = [path for path in [Path(f) for f in glob.glob("/home/nathante/mnt/wikilinks/*.csv.gz")] if path not in valid_filenames]
+
+###print(files)
+
 with mp.Pool(mp.cpu_count() - 1) as pool:
     pool.map(process_gzip, files)
 
