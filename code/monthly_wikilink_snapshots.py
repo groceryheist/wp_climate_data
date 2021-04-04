@@ -40,7 +40,7 @@ def lines_from_gzip(path: Path) -> Iterable[bytes]:
     lines = (s.decode() for s in lines)
     print(path)
     try:
-        yield from csv.reader(lines)
+        yield from csv.reader(lines,dialect='excel')
     except csv.Error:
         print(f"Error in {path}")
 
