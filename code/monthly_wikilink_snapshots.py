@@ -190,10 +190,10 @@ valid_filenames = set(Path(f).name for f in valid)
 
 files = [path for path in [Path(f) for f in glob.glob("/home/nathante/mnt/wikilinks/*.csv.gz")] if path not in valid_filenames]
 
-print(files)
+###print(files)
 
-# with mp.Pool(mp.cpu_count() - 1) as pool:
-#     pool.map(process_gzip, files)
+with mp.Pool(mp.cpu_count() - 1) as pool:
+    pool.map(process_gzip, files)
 
 # def dict_from_line(line: bytes, keys: Iterable[str]) -> Mapping[str, Any]:
 #     items = split_line(line)
