@@ -1,5 +1,5 @@
 import gzip
-from pathlikb import Path
+from pathlib import Path
 from typing import Any
 from collections.abc import Iterable, Mapping
 from itertools import chain, groupby, islice
