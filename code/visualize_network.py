@@ -32,19 +32,29 @@ def build_network(year,  type='full'):
     root_nodes = pd.DataFrame([[6266,'Climate change',0],[5042951,'Global warming',0]],columns=['page_id','page_title','N_hops'])
     nodes_df = dask.concat([nodes_df_1,nodes_df_2,root_nodes]).drop_duplicates()
     nodes_df = nodes_df.groupby(['page_id','page_title']).N_hops.min().reset_index()
+    node_pallete = ['#43D548b3', '#43D591B3', '#43D0D5B3','#4387D5B3','#4387D580']
+    edge_pallete = ['#6cac6e60', '#6cac8e60', '#6caaac60','#6c8aac60','#6c8aac30']
 
     if type == 'full':
-        nodes_df = nodes_df.loc[nodes_df.N_hops < 3]
+        # remove nodes that only have distance 2
+        nodes_df = nodes_df.loc[nodes_df.N_hops < 3,:]
 
         df2 = df.loc[(df.page_id_to.isin(set(list(nodes_df.page_id)))) & (df.page_id_from.isin(set(list(nodes_df.page_id)))),:]
         df2 = df2.loc[df.page_id_from != df.page_id_to]
 
-        # remove isolates
-        nodes_df = nodes_df.loc[nodes_df.page_id.isin(set(list(df2.page_id_from))) | nodes_df.page_id.isin(set(list(df2.page_id_to))),:]
+        # num_edges = df2.groupby('page_id_from').page_id_to.count().reset_index()
+        # num_edges = num_edges.set_index("page_id_from")
 
-        # remove nodes that only have distance 2
-        node_pallete = ['#43D548b3', '#43D591B3', '#43D0D5B3','#4387D5B3','#4387D580']
-        edge_pallete = ['#6cac6e60', '#6cac8e60', '#6caaac60','#6c8aac60','#6c8aac30']
+        nodes_df = nodes_df.set_index("page_id")
+        nodes_df = nodes_df.join(num_edges).reset_index()
+        # remove isolates
+        nodes_df = nodes_df.loc[(nodes_df.page_id.isin(set(list(df2.page_id_from))) | nodes_df.page_id.isin(set(list(df2.page_id_to)))),:]
+
+        # remove nodes that are at distance 2 and only have 1 outgoing edge
+        # i.e., include nodes that have distance less than 2 or have more than one outgoing edge
+        # nodes_df = nodes_df.loc[(nodes_df.page_id > 1) | (nodes_df.N_hops < 2)]  # 
+        
+
     #    styles = ["bold","solid","dashed",""]
         g = pgv.AGraph(strict=False,directed=True)
         print(f'building full network for {year}')
@@ -71,7 +81,6 @@ def build_network(year,  type='full'):
 
         g.layout("sfdp")
         #g.draw(f"graphviz_test_{year}.svg")
-
         print('rendering')
         g.draw(f"graphviz_test_{year}.png")
         print('done')
@@ -83,19 +92,24 @@ def build_network(year,  type='full'):
         df2 = df2.loc[df.page_id_from != df.page_id_to]
 
         # remove isolates
-        nodes_df = nodes_df.loc[nodes_df.page_id.isin(df2.page_id_from) | nodes_df.page_id.isin(df2.page_id_to),:]
+        nodes_df = nodes_df.loc[nodes_df.page_id.isin(set(list(df2.page_id_from))) | nodes_df.page_id.isin(set(list(df2.page_id_to))),:]
 
         g = pgv.AGraph(strict=False,directed=True)
 
-        print(fe"building smaller network for {year}")
+        print(f"building smaller network for {year}")
+        for row in nodes_df.itertuples():
+            n = row.page_id
+            l = row.page_title
+            c = row.N_hops
+            g.add_node(n, label='', color=node_pallete[c],fillcolor=node_pallete[c])
+        del(nodes_df)       
 
-        _ = list(map(lambda n, l, c: g.add_node(n, label=l, fillcolor=node_pallete[c], color=node_pallete[c]), list(nodes_df.page_id),list(nodes_df.page_title),list(nodes_df.N_hops)))
-
-        _ = list(map(lambda f,t,s: g.add_edge(f,t,style=s),
-                     list(df2.page_id_from),
-                     list(df2.page_id_to),
-                     [styles[int(i)]
-                      for i in list(df2.N_hops)]))
+        for row in df2.itertuples():
+            f = row.page_id_from
+            t = row.page_id_to
+            s = row.N_hops
+            g.add_edge(f,t,color=edge_pallete[s])
+        del(df2)
 
         g.node_attr['shape'] = 'plaintext'
         g.node_attr['style'] = 'filled'
@@ -108,7 +122,8 @@ def build_network(year,  type='full'):
         g.layout("neato")
         #g.draw(f"graphviz_test_{year}.svg")
         print('rendering')
-        g.draw(f"graphviz_test_{year}_small.png")
+        g.draw(f"graphviz_{year}_small.png")
 
-build_network("2018",'full')
-build_network("2018",'smaller')
+#build_network("2018",'full')
+for year in range(2001,2018):
+    build_network(str(year),'smaller')
