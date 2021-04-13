@@ -1,0 +1,25 @@
+#All subclasses of "energy industry"
+SELECT ?company ?companydesc ?category ?catdesc WHERE{
+    ?company wdt:P452 ?category.  
+  {?category wdt:P279 wd:Q2151621.}
+    UNION
+    { ?subcat wdt:P279 wd:Q2151621.
+      ?category wdt:P279 ?subcat.
+    }
+  UNION
+    { ?subcat wdt:P279 wd:Q2151621.
+      ?subsubcat wdt:P279 ?subcat.
+     ?category wdt:P279 ?subsubcat.
+    }
+  UNION
+    { ?subcat wdt:P279 wd:Q2151621.
+      ?subsubcat wdt:P279 ?subcat.
+     ?subsubsubcat wdt:P279 ?subsubcat.
+     ?category wdt:P279 ?subsubsubcat.
+    }
+
+   OPTIONAL {
+       ?category rdfs:label ?catdesc filter (lang(?catdesc) = "en").  
+     ?company rdfs:label ?companydesc filter (lang(?companydesc) = "en").    
+   }
+}
