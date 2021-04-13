@@ -70,7 +70,7 @@ climate_change_pages = list(pages_from_category_recursive(session, "Category:Cli
 
 # build a massive regular expression to find matches
 company_names = set(companies.loc[~companies.companydesc.isna(),"companydesc"])
-big_regex = re.compile( ( "|".join(f"[\s\[\[]({name})[\s\]\]]" for name in company_names) ).replace('_','[\s_]'),flags=re.I)
+big_regex = re.compile('(' + ( "|".join(f"[\s\[\[]{name}[\s\]\]]" for name in company_names) ).replace('_','[\s_]') + ')',flags=re.I)
 
 def get_monthly_revs(session, page):
     last_month = None
@@ -94,7 +94,7 @@ def find_mentions(rev, big_regex):
     
 
 @dataclass
-class CompanyMention(object):
+class CompanyMention:
     company:str
     timestamp:datetime
     page:str
@@ -109,9 +109,8 @@ def process_rev(rev, page):
     mentions = find_mentions(rev, big_regex)
     for mention in mentions:
         groups = filter(lambda g: g is not None,mention.groups())
-        for g in groups:
-            yield CompanyMention(company=g, timestamp=timestamp, page=page)
-
+        g = mention[0].strip("[]").strip()
+        yield CompanyMention(company=g, timestamp=timestamp, page=page)
 
 def _process_rev(*args, **kwargs):
     return list(process_rev(*args, **kwargs))
@@ -120,5 +119,4 @@ pool = Pool(2)
 for page in climate_change_pages:
     revs = get_monthly_revs(session, page)
     company_mentions.extend(list(pool.map(partial(_process_rev, page=page),
-                                          revs)))
-
+                                          islice(revs,1))))
