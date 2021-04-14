@@ -37,13 +37,13 @@ def expand_graph(graph:set, distances:Mapping, infile:Path, outfile:Path):
     print(graph)
     new_nodes = set()
     wd = os.getcwd()
-    os.chdir(outfile.parent)
     with gzip.open(str(outfile.name),"wt") as of:
         writer = csv.writer(of,dialect='excel-tab')
         writer.writerow(header)
         for line in lines_from_gzip(Path(infile)):
             dest_id = try_int(line[2])
             source_id = try_int(line[0])
+            nlines = nlines + 1
             if dest_id in graph: # we're connected
                 new_nodes.add(source_id)
                 dist = distances[dest_id]+1

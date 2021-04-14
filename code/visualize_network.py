@@ -122,7 +122,7 @@ def build_network(year,  type='full'):
         g.layout("neato")
         #g.draw(f"graphviz_test_{year}.svg")
         print('rendering')
-        g.draw(f"graphviz_{year}_small.png")
+        g.draw(f"graphviz_{year}_small.svg")
 
 #build_network("2018",'full')
 for year in range(2001,2018):

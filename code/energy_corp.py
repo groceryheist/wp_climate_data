@@ -72,6 +72,9 @@ climate_change_pages = list(pages_from_category_recursive(session, "Category:Cli
 company_names = set(companies.loc[~companies.companydesc.isna(),"companydesc"])
 big_regex = re.compile('(' + ( "|".join(f"[\s\[\[]{name}[\s\]\]]" for name in company_names) ).replace('_','[\s_]') + ')',flags=re.I)
 
+def get_first_rev(session, page):
+    return next((session.revisions.query(titles={page},properties={'ids','timestamp'},direction='newer',limit=1)))
+
 def get_monthly_revs(session, page):
     last_month = None
     monthly_revids = []
@@ -114,6 +117,17 @@ def process_rev(rev, page):
 
 def _process_rev(*args, **kwargs):
     return list(process_rev(*args, **kwargs))
+
+creation_times = []
+
+for page in climate_change_pages:
+    first_rev = get_first_rev(session,page)
+    creation_times.append({'page':page,'timestamp':first_rev.get('timestamp',None)})
+
+
+creation_times_df = pd.DataFrame(creation_times)
+creation_times_df.timestamp = creation_times_df.timestamp.apply(lambda ts: datetime.fromtimestamp(Timestamp(ts).serialize()))
+creation_times_df.to_csv("../data/page_creation_times.csv",index=False) 
 
 pool = Pool(4)
 for page in climate_change_pages:
