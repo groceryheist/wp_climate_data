@@ -90,7 +90,7 @@ def get_monthly_revs(session, page):
     yield from monthly_revs
 
 def find_mentions(rev, big_regex):
-        yield from big_regex.finditer(rev['*'])
+        yield from big_regex.finditer(rev.get('*',""))
     
 
 @dataclass
@@ -98,7 +98,7 @@ class CompanyMention:
     company:str
     timestamp:datetime
     page:str
-
+    revid:int
 
 i = 0 
 company_mentions = []
@@ -110,13 +110,18 @@ def process_rev(rev, page):
     for mention in mentions:
         groups = filter(lambda g: g is not None,mention.groups())
         g = mention[0].strip("[]").strip()
-        yield CompanyMention(company=g, timestamp=timestamp, page=page)
+        yield CompanyMention(company=g, timestamp=timestamp, page=page,revid=rev['revid'])
 
 def _process_rev(*args, **kwargs):
     return list(process_rev(*args, **kwargs))
 
-pool = Pool(2)
+pool = Pool(4)
 for page in climate_change_pages:
+    print(page)
     revs = get_monthly_revs(session, page)
-    company_mentions.extend(list(pool.map(partial(_process_rev, page=page),
-                                          islice(revs,1))))
+    company_mentions.extend(chain(*pool.map(partial(_process_rev, page=page),
+                                            revs)))
+
+print(company_mentions)
+output = pd.DataFrame(company_mentions)
+output.to_csv("../data/company_mentions.csv")
