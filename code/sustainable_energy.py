@@ -66,7 +66,6 @@ def links_from_article(session, title):
     monthly_revs = get_monthly_revs(session, title)
     yield from chain(* map(links_from_rev, monthly_revs))
 
-@lru_cache(maxsize=1028)
 def enumerate_subclasses(wdclient, entityid):
     entity = wdclient.get(entityid)
     subclassof = entity.attributes.get('claims',{}).get('P279',[])
