@@ -14,6 +14,7 @@ def parse_wikimedia_timestamp(timestamp):
 
 apiurl = "https://en.wikipedia.org/w/api.php"
 session = api.Session(apiurl)
+wdclient = Client()
 title = "Sustainable energy"
 
 wikilink_re = re.compile(
