@@ -50,12 +50,19 @@ def get_monthly_revs(session, page):
     last_month = None
     monthly_revids = []
     all_revs = session.revisions.query(titles={page},properties={'ids','timestamp'},direction='newer')
+
+    # 876007050 is a vandalism edit that we caught initially. We fix it by replacing it with this one.
+
     for rev in all_revs:
+        
         timestamp = datetime.fromtimestamp(Timestamp(rev['timestamp']).serialize())        
         month = timestamp.replace(day=1,hour=1,minute=1,second=1).date()
         if last_month is None or last_month < month:
             last_month = month
-            monthly_revids.append(rev['revid'])
+            if rev['revid'] == 876007050:
+                monthly_revids.append(878986915)
+            else:
+                monthly_revids.append(rev['revid'])
 
     monthly_revids.reverse()
     
