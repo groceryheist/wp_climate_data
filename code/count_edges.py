@@ -29,7 +29,7 @@ def count_edges(year):
     return {'year':year,'N':count,'N_climate':count_climate}
 
 pool = Pool(4)
-rows  = list(pool.map(count_edges, (str(y) for y in range(2001,2004))))
+rows  = list(pool.map(count_edges, (str(y) for y in range(2001,2019))))
 df = pd.DataFrame(rows)
 df['prop_climate'] = df.N / df.N_climate
 df.to_csv("../data/wikilink_counts.csv")
